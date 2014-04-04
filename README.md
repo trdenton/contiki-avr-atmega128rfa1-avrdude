@@ -1,15 +1,17 @@
 The Contiki Operating System
 ============================
 
-This is a port of contiki2.7 that works with the zigduino and arduIMU
+This is a port of contiki2.7 that works with the zigduino and arduIMU and other arduino-like boards (that is, it uses AVRDUDE for programming)
 
 use ala:
+
 make TARGET=avr-atmega128rfa1 project\_name.u AVRDUDE\_PORT=/dev/ttyUSB0
+
 make login
 
 
 
-[![Build Status](https://secure.travis-ci.org/contiki-os/contiki.png)](http://travis-ci.org/contiki-os/contiki)
+
 
 Contiki is an open source operating system that runs on tiny low-power
 microcontrollers and makes it possible to develop applications that
