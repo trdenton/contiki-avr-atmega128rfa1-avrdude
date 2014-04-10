@@ -176,24 +176,40 @@ void initialize(void)
 /* The Raven implements a serial command and data interface via uart0 to a 3290p,
  * which could be duplicated using another host computer.
  */
-#if !RF230BB_CONF_LEDONPORTE1   //Conflicts with USART0
-#ifdef RAVEN_LCD_INTERFACE
-  rs232_init(RS232_PORT_0, USART_BAUD_57600,USART_PARITY_NONE | USART_STOP_BITS_1 | USART_DATA_BITS_8);
-  rs232_set_input(0,raven_lcd_serial_input);
-#else
-  /* Generic or slip connection on uart0 */
-  rs232_init(RS232_PORT_0, USART_BAUD_57600,USART_PARITY_NONE | USART_STOP_BITS_1 | USART_DATA_BITS_8);
-#endif
-#endif
 
-  /* Second rs232 port for debugging or slip alternative */
-  rs232_init(RS232_PORT_0, USART_BAUD_57600,USART_PARITY_NONE | USART_STOP_BITS_1 | USART_DATA_BITS_8);
-  /* Redirect stdout */
-#if RF230BB_CONF_LEDONPORTE1 || defined(RAVEN_LCD_INTERFACE)
-  rs232_redirect_stdout(RS232_PORT_0);
+#if WITH_SLIP
+  //Slip border router on uart0
+  rs232_init(RS232_PORT_0, USART_BAUD_38400,USART_PARITY_NONE | USART_STOP_BITS_1 | USART_DATA_BITS_8);
 #else
+  /* First rs232 port for debugging */
+  rs232_init(RS232_PORT_0, USART_BAUD_57600,USART_PARITY_NONE | USART_STOP_BITS_1 | USART_DATA_BITS_8);
+
+  /* Redirect stdout to first port */
   rs232_redirect_stdout(RS232_PORT_0);
+
+  /* Get input from first port */
+  rs232_set_input(RS232_PORT_0, serial_line_input_byte);
 #endif
+//
+//
+//#if !RF230BB_CONF_LEDONPORTE1   //Conflicts with USART0
+//#ifdef RAVEN_LCD_INTERFACE
+//  rs232_init(RS232_PORT_0, USART_BAUD_57600,USART_PARITY_NONE | USART_STOP_BITS_1 | USART_DATA_BITS_8);
+//  rs232_set_input(0,raven_lcd_serial_input);
+//#else
+//  /* Generic or slip connection on uart0 */
+//  rs232_init(RS232_PORT_0, USART_BAUD_57600,USART_PARITY_NONE | USART_STOP_BITS_1 | USART_DATA_BITS_8);
+//#endif
+//#endif
+//
+//  /* Second rs232 port for debugging or slip alternative */
+//  rs232_init(RS232_PORT_0, USART_BAUD_57600,USART_PARITY_NONE | USART_STOP_BITS_1 | USART_DATA_BITS_8);
+//  /* Redirect stdout */
+//#if RF230BB_CONF_LEDONPORTE1 || defined(RAVEN_LCD_INTERFACE)
+//  rs232_redirect_stdout(RS232_PORT_0);
+//#else
+//  rs232_redirect_stdout(RS232_PORT_0);
+//#endif
   clock_init();
 
   if(MCUSR & (1<<PORF )) PRINTD("Power-on reset.\n");
@@ -201,6 +217,7 @@ void initialize(void)
   if(MCUSR & (1<<BORF )) PRINTD("Brownout reset!\n");
   if(MCUSR & (1<<WDRF )) PRINTD("Watchdog reset!\n");
   if(MCUSR & (1<<JTRF )) PRINTD("JTAG reset!\n");
+
 
 #if STACKMONITOR
   /* Simple stack pointer highwater monitor. Checks for magic numbers in the main
@@ -246,6 +263,9 @@ uint8_t i;
   /* etimers must be started before ctimer_init */
   process_start(&etimer_process, NULL);
   ctimer_init();
+
+  //start serial line 
+  serial_line_init();
 
   /* Start radio and radio receive process */
   NETSTACK_RADIO.init();
